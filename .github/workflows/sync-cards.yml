@@ -1,0 +1,29 @@
+name: Sync Cards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cards/**"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Sync cards to database
+        run: python -m server.seed
+        env:
+          MAP_DB_PATH: data/map_cards.db
+
+      - name: Report sync results
+        run: echo "Cards synced successfully from cards/ directory"

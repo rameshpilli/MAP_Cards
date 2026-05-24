@@ -1,0 +1,28 @@
+name: Validate Card
+
+on:
+  pull_request:
+    paths:
+      - "cards/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Validate card YAML files
+        run: python -m tests.test_card_validation
+
+      - name: Check card can be synced
+        run: |
+          python -m server.seed
+          echo "Card sync successful"

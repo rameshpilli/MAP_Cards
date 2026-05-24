@@ -1,0 +1,14 @@
+{
+  "name": "map-cards",
+  "version": "0.1.0",
+  "description": "CLI tool for installing MAPrompt Cards prompt templates",
+  "bin": {
+    "map-cards": "./index.js"
+  },
+  "keywords": ["ai", "prompts", "templates", "map-cards", "claude", "gpt"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/map-cards/map-cards"
+  }
+}

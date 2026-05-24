@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAPrompt Cards — Multi-Agent Prompt Cards</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #F9FAFB;
+            --white: #FFFFFF;
+            --indigo-50: #EEF2FF;
+            --indigo-100: #E0E7FF;
+            --indigo-500: #6366F1;
+            --indigo-600: #4F46E5;
+            --indigo-700: #4338CA;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+            --green-100: #D1FAE5;
+            --green-700: #047857;
+            --yellow-100: #FEF3C7;
+            --yellow-700: #B45309;
+            --red-100: #FEE2E2;
+            --red-700: #B91C1C;
+            --blue-100: #DBEAFE;
+            --blue-700: #1D4ED8;
+            --purple-100: #EDE9FE;
+            --purple-700: #6D28D9;
+            --orange-100: #FFEDD5;
+            --orange-700: #C2410C;
+            --teal-100: #CCFBF1;
+            --teal-700: #0F766E;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-decoration: none;
+        }
+
+        .navbar-brand .logo {
+            width: 32px;
+            height: 32px;
+            background: var(--indigo-600);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+            width: 320px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 16px 8px 40px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--indigo-500);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+
+        .search-box::before {
+            content: "\1F50D";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--indigo-600);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary:hover { background: var(--indigo-700); }
+
+        /* --- Container --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* --- Stats Strip --- */
+        .stats-strip {
+            display: flex;
+            gap: 24px;
+            padding: 24px 0;
+            justify-content: center;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius-sm);
+            padding: 20px 32px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            min-width: 160px;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--indigo-600);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        /* --- Category Pills --- */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar .label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .pill {
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--gray-300);
+            background: var(--white);
+            font-size: 13px;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pill:hover { border-color: var(--indigo-400); color: var(--indigo-600); }
+        .pill.active {
+            background: var(--indigo-600);
+            color: white;
+            border-color: var(--indigo-600);
+        }
+
+        .sort-select {
+            margin-left: auto;
+            padding: 6px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--gray-700);
+            background: var(--white);
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* --- Section Headers --- */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 0 16px;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .section-header .badge {
+            background: var(--indigo-100);
+            color: var(--indigo-700);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        /* --- Card Grid --- */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding-bottom: 40px;
+        }
+
+        @media (max-width: 900px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .card-grid { grid-template-columns: 1fr; } }
+
+        /* --- Card --- */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.2s, transform 0.15s;
+            border: 1px solid var(--gray-100);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .category-pill {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .category-pill[data-cat="code-review"] { background: var(--blue-100); color: var(--blue-700); }
+        .category-pill[data-cat="security"] { background: var(--red-100); color: var(--red-700); }
+        .category-pill[data-cat="research"] { background: var(--purple-100); color: var(--purple-700); }
+        .category-pill[data-cat="devops"] { background: var(--orange-100); color: var(--orange-700); }
+        .category-pill[data-cat="data"] { background: var(--teal-100); color: var(--teal-700); }
+        .category-pill[data-cat="writing"] { background: var(--yellow-100); color: var(--yellow-700); }
+        .category-pill[data-cat="testing"] { background: var(--green-100); color: var(--green-700); }
+        .category-pill[data-cat="multi-agent"] { background: var(--indigo-100); color: var(--indigo-700); }
+
+        .card-stars {
+            color: #FBBF24;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-stars .count {
+            color: var(--gray-500);
+            font-size: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .card-author {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-bottom: 10px;
+        }
+
+        .card-author a {
+            color: var(--indigo-600);
+            text-decoration: none;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--gray-600);
+            line-height: 1.5;
+            flex: 1;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .card-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            border-radius: 4px;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--gray-100);
+        }
+
+        .card-downloads {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .btn-install {
+            background: var(--indigo-50);
+            color: var(--indigo-700);
+            border: 1px solid var(--indigo-200);
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-install:hover {
+            background: var(--indigo-600);
+            color: white;
+            border-color: var(--indigo-600);
+        }
+
+        .btn-install.copied {
+            background: var(--green-100);
+            color: var(--green-700);
+            border-color: var(--green-100);
+        }
+
+        /* --- Modal --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h2 { font-size: 22px; }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--gray-400);
+            padding: 4px;
+        }
+
+        .modal-prompt {
+            background: var(--gray-900);
+            color: #E5E7EB;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'SFMono-Regular', Menlo, Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .modal-meta span {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        /* --- Rating --- */
+        .star-rating {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .star-rating .star {
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--gray-300);
+            transition: color 0.15s;
+        }
+
+        .star-rating .star.filled { color: #FBBF24; }
+        .star-rating .star:hover { color: #F59E0B; }
+
+        /* --- Footer --- */
+        .footer {
+            background: var(--white);
+            border-top: 1px solid var(--gray-200);
+            padding: 24px;
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .footer a { color: var(--indigo-600); text-decoration: none; }
+
+        /* --- Empty State --- */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-400);
+        }
+
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--gray-500); }
+
+        /* --- Toast --- */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--gray-900);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: var(--shadow-lg);
+            z-index: 300;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/" class="navbar-brand">
+        <div class="logo">M</div>
+        MAPrompt Cards
+    </a>
+    <div class="navbar-right">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search cards..." autocomplete="off">
+        </div>
+        <a href="https://github.com/map-cards/map-cards" target="_blank" class="btn-primary">Submit Card +</a>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Stats Strip -->
+    <div class="stats-strip" id="statsStrip">
+        <div class="stat-card">
+            <div class="stat-number" id="statCards">-</div>
+            <div class="stat-label">Prompt Cards</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="statDownloads">-</div>
+            <div class="stat-label">Total Installs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="statContributors">-</div>
+            <div class="stat-label">Contributors</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="statRating">-</div>
+            <div class="stat-label">Avg Rating</div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <span class="label">Categories:</span>
+        <button class="pill active" data-category="">All</button>
+        <div id="categoryPills"></div>
+        <select class="sort-select" id="sortSelect">
+            <option value="downloads">Most Installed</option>
+            <option value="rating">Highest Rated</option>
+            <option value="newest">Newest</option>
+            <option value="trending">Trending</option>
+        </select>
+    </div>
+
+    <!-- Trending Section -->
+    <div class="section-header" id="trendingHeader">
+        <h2>Trending This Week</h2>
+        <span class="badge">HOT</span>
+    </div>
+    <div class="card-grid" id="trendingGrid"></div>
+
+    <!-- All Cards Section -->
+    <div class="section-header">
+        <h2>All Cards</h2>
+        <span class="badge" id="allCardsBadge">0 cards</span>
+    </div>
+    <div class="card-grid" id="allCardsGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+        <h3>No cards found</h3>
+        <p>Try adjusting your search or filters</p>
+    </div>
+</div>
+
+<!-- Card Detail Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitle"></h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-meta" id="modalMeta"></div>
+        <div class="modal-prompt" id="modalPrompt"></div>
+        <div class="modal-actions">
+            <button class="btn-primary" onclick="copyModalPrompt()">Copy Prompt</button>
+            <div class="star-rating" id="modalRating"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Footer -->
+<footer class="footer">
+    <p>MAPrompt Cards v0.1.0 &mdash; Open-source prompt marketplace.
+       <a href="https://github.com/map-cards/map-cards" target="_blank">GitHub</a> &middot;
+       <a href="/docs">API Docs</a> &middot;
+       MIT License
+    </p>
+</footer>
+
+<script>
+    const API = '/api';
+    let allCards = [];
+    let currentCategory = '';
+    let currentSort = 'downloads';
+    let currentSearch = '';
+    let currentModalCard = null;
+
+    // ---- Fetch helpers ----
+    async function fetchJSON(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    }
+
+    async function postJSON(url, body = {}) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    }
+
+    // ---- Toast ----
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ---- Stars ----
+    function renderStars(rating, count) {
+        const full = Math.round(rating || 0);
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+            html += i <= full ? '★' : '☆';
+        }
+        if (count > 0) html += ` <span class="count">(${count})</span>`;
+        return html;
+    }
+
+    // ---- Card HTML ----
+    function cardHTML(card) {
+        const tags = (card.tags || []).slice(0, 4).map(t =>
+            `<span class="card-tag">${t}</span>`
+        ).join('');
+        return `
+        <div class="card" data-name="${card.name}">
+            <div class="card-top">
+                <span class="category-pill" data-cat="${card.category}">${card.category}</span>
+                <div class="card-stars">${renderStars(card.avg_rating, card.rating_count)}</div>
+            </div>
+            <div class="card-title">${card.title}</div>
+            <div class="card-author">by <a href="${card.author_url || '#'}" target="_blank">${card.author}</a></div>
+            <div class="card-desc">${card.description}</div>
+            <div class="card-tags">${tags}</div>
+            <div class="card-footer">
+                <span class="card-downloads">${card.download_count || 0} installs</span>
+                <button class="btn-install" onclick="installCard(event, '${card.name}')">Install</button>
+            </div>
+        </div>`;
+    }
+
+    // ---- Render functions ----
+    function renderCards(cards, containerId) {
+        const grid = document.getElementById(containerId);
+        if (cards.length === 0) {
+            grid.innerHTML = '';
+            return;
+        }
+        grid.innerHTML = cards.map(cardHTML).join('');
+        // Click to open modal
+        grid.querySelectorAll('.card').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-install')) return;
+                const name = el.dataset.name;
+                const card = allCards.find(c => c.name === name);
+                if (card) openModal(card);
+            });
+        });
+    }
+
+    function renderCategoryPills(categories) {
+        const container = document.getElementById('categoryPills');
+        container.innerHTML = categories.map(c =>
+            `<button class="pill" data-category="${c.name}">${c.name} (${c.count})</button>`
+        ).join('');
+    }
+
+    function updatePillStates() {
+        document.querySelectorAll('.pill').forEach(p => {
+            p.classList.toggle('active', p.dataset.category === currentCategory);
+        });
+    }
+
+    // ---- Filter & display ----
+    function filterAndDisplay() {
+        let filtered = allCards;
+
+        // Search
+        if (currentSearch) {
+            const q = currentSearch.toLowerCase();
+            filtered = filtered.filter(c =>
+                c.title.toLowerCase().includes(q) ||
+                c.description.toLowerCase().includes(q) ||
+                c.name.toLowerCase().includes(q) ||
+                (c.tags || []).some(t => t.toLowerCase().includes(q)) ||
+                c.author.toLowerCase().includes(q)
+            );
+        }
+
+        // Category
+        if (currentCategory) {
+            filtered = filtered.filter(c => c.category === currentCategory);
+        }
+
+        // Sort
+        filtered.sort((a, b) => {
+            if (currentSort === 'downloads') return (b.download_count || 0) - (a.download_count || 0);
+            if (currentSort === 'rating') return (b.avg_rating || 0) - (a.avg_rating || 0);
+            if (currentSort === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+            if (currentSort === 'trending') return (b.trending_score || 0) - (a.trending_score || 0);
+            return 0;
+        });
+
+        renderCards(filtered, 'allCardsGrid');
+        document.getElementById('allCardsBadge').textContent = `${filtered.length} cards`;
+        document.getElementById('emptyState').style.display = filtered.length === 0 ? 'block' : 'none';
+    }
+
+    // ---- Install (copy + track download) ----
+    async function installCard(event, name) {
+        event.stopPropagation();
+        const btn = event.target;
+        try {
+            const data = await postJSON(`${API}/cards/${name}/download`);
+            await navigator.clipboard.writeText(data.prompt);
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            showToast(`Prompt copied to clipboard! (${data.download_count} total installs)`);
+
+            // Update local count
+            const card = allCards.find(c => c.name === name);
+            if (card) card.download_count = data.download_count;
+
+            setTimeout(() => {
+                btn.textContent = 'Install';
+                btn.classList.remove('copied');
+            }, 2000);
+        } catch (err) {
+            showToast('Failed to install card');
+        }
+    }
+
+    // ---- Modal ----
+    function openModal(card) {
+        currentModalCard = card;
+        document.getElementById('modalTitle').textContent = card.title;
+        document.getElementById('modalMeta').innerHTML = `
+            <span>by ${card.author}</span>
+            <span>${card.category}</span>
+            <span>v${card.version}</span>
+            <span>${card.download_count || 0} installs</span>
+            <span>${card.platforms ? card.platforms.join(', ') : ''}</span>
+        `;
+        document.getElementById('modalPrompt').textContent = card.prompt;
+
+        // Rating stars
+        const ratingDiv = document.getElementById('modalRating');
+        ratingDiv.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('span');
+            star.className = 'star' + (i <= Math.round(card.avg_rating || 0) ? ' filled' : '');
+            star.textContent = '★';
+            star.onclick = () => rateCard(card.name, i);
+            ratingDiv.appendChild(star);
+        }
+
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        currentModalCard = null;
+    }
+
+    async function copyModalPrompt() {
+        if (!currentModalCard) return;
+        try {
+            await navigator.clipboard.writeText(currentModalCard.prompt);
+            showToast('Prompt copied to clipboard!');
+        } catch {
+            showToast('Failed to copy');
+        }
+    }
+
+    async function rateCard(name, stars) {
+        try {
+            const userId = localStorage.getItem('map_user_id') || crypto.randomUUID();
+            localStorage.setItem('map_user_id', userId);
+            const data = await postJSON(`${API}/cards/${name}/rate`, { user_id: userId, stars });
+            showToast(`Rated ${stars} stars! (avg: ${data.avg_rating})`);
+
+            // Update local data
+            const card = allCards.find(c => c.name === name);
+            if (card) {
+                card.avg_rating = data.avg_rating;
+                card.rating_count = data.rating_count;
+            }
+            filterAndDisplay();
+            if (currentModalCard && currentModalCard.name === name) {
+                openModal(card);
+            }
+        } catch {
+            showToast('Failed to rate');
+        }
+    }
+
+    // ---- Event listeners ----
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        filterAndDisplay();
+    });
+
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        filterAndDisplay();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('pill')) {
+            currentCategory = e.target.dataset.category;
+            updatePillStates();
+            filterAndDisplay();
+        }
+    });
+
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ---- Init ----
+    async function init() {
+        try {
+            // Fetch stats
+            const stats = await fetchJSON(`${API}/stats`);
+            document.getElementById('statCards').textContent = stats.total_cards;
+            document.getElementById('statDownloads').textContent = stats.total_downloads.toLocaleString();
+            document.getElementById('statContributors').textContent = stats.total_contributors;
+            document.getElementById('statRating').textContent = stats.average_rating > 0 ? stats.average_rating.toFixed(1) : '-';
+
+            // Fetch categories
+            const catData = await fetchJSON(`${API}/cards/categories`);
+            renderCategoryPills(catData.categories || []);
+
+            // Fetch trending
+            const trendingData = await fetchJSON(`${API}/cards/trending?limit=3`);
+            renderCards(trendingData.cards || [], 'trendingGrid');
+            if ((trendingData.cards || []).length === 0) {
+                document.getElementById('trendingHeader').style.display = 'none';
+            }
+
+            // Fetch all cards
+            const cardsData = await fetchJSON(`${API}/cards?limit=100`);
+            allCards = cardsData.cards || [];
+            filterAndDisplay();
+
+        } catch (err) {
+            console.error('Failed to load data:', err);
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('emptyState').querySelector('h3').textContent = 'Failed to load cards';
+            document.getElementById('emptyState').querySelector('p').textContent = 'Make sure the API server is running';
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>

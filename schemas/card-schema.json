@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MAP Card",
+  "description": "Schema for a MAP Card YAML file",
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "title",
+    "description",
+    "author",
+    "category",
+    "tags",
+    "platforms",
+    "prompt"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+      "description": "URL-safe slug identifier for the card"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100,
+      "description": "Human-readable title"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500,
+      "description": "Short description of what the card does"
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Author handle or name"
+    },
+    "author_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to author profile"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "code-review",
+        "security",
+        "research",
+        "devops",
+        "data",
+        "writing",
+        "testing",
+        "multi-agent"
+      ],
+      "description": "Card category"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "maxItems": 10,
+      "description": "Searchable tags"
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["claude", "codex", "gpt", "gemini", "llama", "mistral"]
+      },
+      "minItems": 1,
+      "description": "Compatible AI platforms"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date card was created"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date card was last updated"
+    },
+    "license": {
+      "type": "string",
+      "default": "MIT",
+      "description": "License for the prompt"
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 50,
+      "description": "The full prompt template text"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "default": { "type": "string" }
+        }
+      },
+      "description": "Template variables that can be customized"
+    }
+  },
+  "additionalProperties": false
+}

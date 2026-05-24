@@ -60,6 +60,7 @@ def test_get_single_card() -> None:
     assert data["name"] == "full-stack-code-review"
     assert data["title"] == "Full-Stack Code Review Agent"
     assert len(data["prompt"]) > 100
+    assert any(option["target"] == "codex" for option in data["install_options"])
     logger.info("  PASS: Get single card")
 
 
@@ -113,13 +114,45 @@ def test_sort_by_newest() -> None:
 def test_download_card() -> None:
     """Downloading a card should increment count and return prompt."""
     client = _setup()
-    resp = client.post("/api/cards/full-stack-code-review/download")
+    resp = client.post("/api/cards/full-stack-code-review/download", json={"target": "codex"})
     assert resp.status_code == 200
     data = resp.json()
     assert data["name"] == "full-stack-code-review"
     assert len(data["prompt"]) > 100
     assert data["download_count"] >= 1
+    assert data["bootstrap"]["target"] == "codex"
+    assert data["bootstrap"]["filename"].endswith(".codex.md")
     logger.info("  PASS: Download card (count: %d)", data["download_count"])
+
+
+def test_bootstrap_card() -> None:
+    """Bootstrap endpoint should return target-specific artifacts."""
+    client = _setup()
+    resp = client.get("/api/cards/full-stack-code-review/bootstrap?target=claude")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["target"] == "claude"
+    assert data["filename"].endswith(".claude.json")
+    assert "schema_version" in data["content"]
+    logger.info("  PASS: Bootstrap card")
+
+
+def test_bootstrap_card_download_attachment() -> None:
+    """Bootstrap endpoint can return the artifact as an attachment."""
+    client = _setup()
+    resp = client.get("/api/cards/full-stack-code-review/bootstrap?target=markdown&download=true")
+    assert resp.status_code == 200
+    assert "attachment" in resp.headers["content-disposition"]
+    assert resp.text.startswith("# Full-Stack Code Review Agent")
+    logger.info("  PASS: Bootstrap attachment")
+
+
+def test_bootstrap_invalid_target() -> None:
+    """Invalid bootstrap targets should be rejected."""
+    client = _setup()
+    resp = client.get("/api/cards/full-stack-code-review/bootstrap?target=spaceship")
+    assert resp.status_code == 422
+    logger.info("  PASS: Invalid bootstrap target rejected")
 
 
 def test_rate_card() -> None:
@@ -221,6 +254,9 @@ def main() -> None:
         test_filter_by_category,
         test_sort_by_newest,
         test_download_card,
+        test_bootstrap_card,
+        test_bootstrap_card_download_attachment,
+        test_bootstrap_invalid_target,
         test_rate_card,
         test_rate_card_update,
         test_rate_card_invalid,

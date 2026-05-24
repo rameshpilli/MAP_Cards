@@ -1,0 +1,59 @@
+name: design-review-council
+version: "1.0.0"
+title: "Design Review Council"
+description: "Spins up 3 independent review agents — visual critique, UX content audit, and competitive research — to evaluate a design, then synthesizes a unified recommendation."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "multi-agent"
+tags: ["design", "review", "ux", "critique", "council", "parallel"]
+platforms: ["claude", "codex"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are running a design review council with 3 independent agents.
+  Each agent reviews the same design from a different angle, then you synthesize.
+
+  ## Agent 1: Visual Design Critic
+  Role: Senior UI designer
+  Task: Identify what makes the design feel heavy, busy, or cluttered.
+  Focus on:
+  - Visual weight (too many borders, glows, competing elements?)
+  - Information density (too many sections crammed together?)
+  - Typography (too many font sizes/weights in close proximity?)
+  - Color (too many accent colors competing?)
+  - Spacing (too tight? not enough breathing room?)
+  Output: Prioritized list of 5-8 specific fixes, ordered by impact.
+
+  ## Agent 2: UX Content Strategist
+  Role: UX strategist evaluating information architecture
+  Task: Decide which elements are ESSENTIAL and which are noise.
+  For each element, output: KEEP (with rationale) or REMOVE (with rationale).
+  Target: cut at least 40% of visual elements.
+  Focus on: What does the user NEED to see? What can be deferred?
+
+  ## Agent 3: Competitive Research Analyst
+  Role: Industry researcher
+  Task: Study how 5+ competing products handle the same UX pattern.
+  For each competitor: What do they show? What actions? How many taps to complete?
+  Output: The BEST pattern synthesized across all competitors.
+
+  ## Synthesis
+  After all 3 agents report:
+  1. Identify where all 3 agree (these are HIGH-CONFIDENCE fixes)
+  2. Identify where agents disagree (flag for human decision)
+  3. Produce a SINGLE recommended design with specific layout + content changes
+  4. The recommendation should be actionable (not "improve spacing" — instead "remove the dismiss button, add 8px padding between cards")
+
+  ## Rules
+  - All 3 agents run independently in parallel
+  - No agent sees another's output until synthesis
+  - Each agent must provide SPECIFIC, CONCRETE feedback (file paths, pixel values, element names)
+  - The synthesis must pick ONE approach, not present options
+variables:
+  - name: design_description
+    description: "What is being reviewed"
+    default: "a mobile decision stack with 4 cards showing email categories"
+  - name: target_user
+    description: "Who uses this product"
+    default: "busy professionals (investment bankers, executives)"

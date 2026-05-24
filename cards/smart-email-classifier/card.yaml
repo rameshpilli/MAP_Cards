@@ -1,0 +1,61 @@
+name: smart-email-classifier
+version: "1.0.0"
+title: "Smart Email Classifier"
+description: "Builds a multi-tier email classification system — heuristic rules first, LLM fallback second — supporting both Gmail and Outlook with 11+ intelligent categories."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "multi-agent"
+tags: ["email", "classification", "gmail", "outlook", "heuristics", "llm"]
+platforms: ["claude", "codex"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are building a smart email classification system that replaces generic "Low signal" tags with 11 intelligent categories. The system must work across both Gmail and Outlook.
+
+  ## Category taxonomy (priority order — first match wins)
+
+  | Tag | Color | Determination |
+  |---|---|---|
+  | spam | red | is_spam flag |
+  | action-needed | red | is_flagged, is_important, urgent keywords in subject |
+  | government | red | sender domain .gov, DMV, IRS, SSA |
+  | order-update | teal | amazon.com, ups.com, fedex.com; subject has order/shipped/delivered |
+  | meeting | blue | subject has meeting/calendar/invite/rsvp/agenda |
+  | promotion | amber | Gmail promotions tab + subject has % off/sale/free/deal |
+  | subscription | grey | List-Unsubscribe header + noreply sender |
+  | newsletter | grey | List-Unsubscribe or Gmail updates/forums tab |
+  | social | blue | Gmail social tab |
+  | work | purple | sender domain matches user's own domain |
+  | personal | green | primary tab, no List-Unsubscribe, not noreply (default) |
+
+  ## Implementation
+
+  ### Server-side: `classify_smart_tag()` function
+  A 13-step heuristic chain that checks in priority order. No LLM needed — fast, deterministic, zero-cost.
+
+  Inputs: sender_address, sender_name, subject, category_hint (Gmail), is_important, is_flagged, is_spam, has_list_unsubscribe
+
+  ### Dual-provider support
+  - **Gmail**: Read `CATEGORY_*` labels → `category_hint` (promotions, updates, social, forums, empty=primary)
+  - **Outlook**: Read `inferenceClassification` (focused/other) as category_hint equivalent
+  - **Both**: Check `List-Unsubscribe` header for newsletter/subscription detection
+
+  ### Client-side mirror
+  Implement the same heuristic chain in JavaScript as `classifySmartTag()`. Use server `smart_tag` when available, fall back to client-side heuristics.
+
+  ### Display
+  Color-coded tag pills per category. Priority sort: action-needed first, subscriptions last.
+
+  ## Rules
+  - Heuristics FIRST — they're fast, free, and deterministic
+  - LLM only for ambiguous emails that fall through to "personal"
+  - Must work offline (no API calls for basic classification)
+  - The same email must get the same tag on server AND client
+variables:
+  - name: email_provider
+    description: "Primary email provider"
+    default: "gmail"
+  - name: additional_categories
+    description: "Custom categories to add beyond the default 11"
+    default: ""

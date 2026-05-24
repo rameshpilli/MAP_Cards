@@ -16,13 +16,20 @@ uvicorn map_cards.app:app --reload  # start API on :8000
 open http://localhost:8000
 ```
 
-## Install a card
+## Bootstrap a card
 
 ```bash
-npx map-cards install full-stack-code-review
+npx map-cards install full-stack-code-review --target codex --dir .
 ```
 
-Or use the dashboard -- click **Install** to copy a prompt to your clipboard.
+The CLI now writes a real artifact instead of just printing text:
+
+- `--target codex` creates `.codex/map-cards/<card>.codex.md` and adds an `AGENTS.md` reference.
+- `--target claude` creates a `.claude/map-cards` manifest and adds a managed `CLAUDE.md` memory entry.
+- `--target markdown` saves a portable Markdown prompt card.
+- `--target prompt --print` prints the raw prompt text.
+
+Or use the dashboard -- click **Install** on any card to choose Codex, Claude, Markdown, or raw prompt export.
 
 ## Architecture
 
@@ -73,7 +80,10 @@ See [docs/api.md](docs/api.md) for the full endpoint reference.
 ```bash
 curl http://localhost:8000/api/cards           # list
 curl http://localhost:8000/api/cards?q=security # search
-curl -X POST http://localhost:8000/api/cards/full-stack-code-review/download
+curl -X POST http://localhost:8000/api/cards/full-stack-code-review/download \
+  -H 'Content-Type: application/json' \
+  -d '{"target":"codex"}'
+curl 'http://localhost:8000/api/cards/full-stack-code-review/bootstrap?target=claude'
 ```
 
 ## Tests

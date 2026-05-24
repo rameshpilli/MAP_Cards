@@ -1,0 +1,79 @@
+name: hierarchical-memory-builder
+version: "1.0.0"
+title: "Hierarchical Memory Builder"
+description: "Builds a 3-layer memory system — atomic facts, daily summaries, weekly narratives — with LLM consolidation and extractive fallback for temporal AI context."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "multi-agent"
+tags: ["memory", "summarization", "knowledge-graph", "temporal", "rag"]
+platforms: ["claude", "codex"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are building a hierarchical memory summarization system with 3 layers:
+
+  ```
+  Layer 3: Weekly summaries   ← fold daily summaries per entity
+  Layer 2: Daily summaries    ← consolidate atomic facts per entity per day
+  Layer 1: Atomic facts       ← (subject, predicate, object) triples
+  ```
+
+  ## Data model
+
+  ### MemorySummary table
+  - entity: str (person, company, topic being summarized)
+  - period: "daily" | "weekly"
+  - period_start / period_end: datetime
+  - summary: str (the narrative)
+  - fact_count: int
+  - fact_ids: JSON list
+  - embedding_id: int (for vector search)
+
+  ## Functions to implement
+
+  ### consolidate_daily()
+  1. Query all facts created in the last 24 hours
+  2. Group by subject (entity)
+  3. For each entity with 2+ facts:
+     a. Build a prompt: "Summarize these facts about {entity} into 2-3 sentences"
+     b. Call LLM for summary (with extractive fallback if LLM unavailable)
+     c. Store as MemorySummary with period="daily"
+     d. Embed for vector search
+
+  ### consolidate_weekly()
+  1. Query daily summaries from the last 7 days
+  2. Group by entity
+  3. For entities with 2+ daily summaries:
+     a. Combine narratives into a weekly summary via LLM
+     b. Store as MemorySummary with period="weekly"
+
+  ### search_summaries(query, period=None, limit=5)
+  Vector similarity search on summaries with optional period filter.
+
+  ### get_entity_timeline(entity, days=30)
+  Returns weekly summaries + daily summaries + recent atomic facts for one entity.
+
+  ## Extractive fallback (when LLM unavailable)
+  - Concatenate fact objects
+  - Deduplicate
+  - Extract named entities (regex: proper names, dates, currency)
+  - Join into a plain summary sentence
+
+  ## Integration
+  - Run consolidation every 6 hours via periodic job
+  - Enhanced memory.search returns summaries alongside atomic facts
+  - Enhanced system_prompt() gets a MEMORY.context section with recent entity timelines
+
+  ## Rules
+  - Summaries are idempotent (skip if already exists for this entity+period)
+  - Embed summaries in the SAME vector store but with ID offset (+10M) to avoid collision with facts
+  - Gracefully handle LLM failures (extractive fallback, never crash)
+  - Multi-tenant: iterate all tenant/user pairs, not just default
+variables:
+  - name: consolidation_interval
+    description: "How often to run consolidation"
+    default: "6 hours"
+  - name: vector_id_offset
+    description: "Offset for summary IDs in shared vector store"
+    default: "10000000"

@@ -1,0 +1,69 @@
+name: adversarial-input-tester
+version: "1.0.0"
+title: "Adversarial Input Tester"
+description: "Spins up 3 parallel agents that try to BREAK your API with worst-case inputs — XSS, SQL injection, empty fields, massive payloads, race conditions, and edge cases."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "testing"
+tags: ["adversarial", "security", "input-validation", "edge-cases", "api-testing", "multi-agent"]
+platforms: ["claude", "codex"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are an adversarial testing orchestrator. Spin up 3 specialized agents that each try to BREAK a different aspect of the target system.
+
+  ## Agent 1: Input Validation Breaker
+  Try every worst-case input scenario:
+  - XSS payloads: `<script>alert(1)</script>` in every text field
+  - SQL injection: `'; DROP TABLE users; --` in every field
+  - Empty strings, null values, missing required fields
+  - Very long strings (5000+ chars)
+  - Unicode/emoji edge cases
+  - HTML entities, control characters, newlines
+  - Integer overflow (99999999999999999)
+  - Negative numbers where positives expected
+  - Float where integer expected
+  - String where number expected
+  - Nested JSON bombs
+  For each: send via curl, report HTTP status, PASS/FAIL.
+
+  ## Agent 2: Business Logic Breaker
+  Try to violate business rules:
+  - Create then immediately delete, then operate on deleted resource
+  - Update to invalid state (e.g., set required field to empty via PATCH)
+  - Double-submit the same action
+  - Operate on resources belonging to other users/tenants
+  - Exceed rate limits / create 100 items rapidly
+  - Use expired/revoked tokens
+  - Access admin endpoints as regular user
+
+  ## Agent 3: Protocol & Format Breaker
+  Try protocol-level attacks:
+  - Wrong HTTP method (GET instead of POST)
+  - Missing Content-Type header
+  - XML body instead of JSON
+  - Massive request body (100KB+)
+  - Concurrent requests to the same endpoint
+  - Malformed JSON
+  - Extra unexpected fields in the body
+  - Path traversal in URL parameters
+
+  ## Synthesis
+  After all 3 agents complete:
+  1. Compile a table: Test # | Scenario | Expected | Actual | PASS/FAIL
+  2. Group failures by severity: Critical / High / Medium / Low
+  3. For each failure, propose the specific code fix
+
+  ## Rules
+  - Each agent runs independently and tests via actual HTTP requests
+  - Clean up all test data after each agent finishes
+  - Report BOTH passes and failures (passes prove the system is robust)
+  - Be creative — think like a malicious user, not a happy-path tester
+variables:
+  - name: api_base_url
+    description: "Base URL of the API to test"
+    default: "http://127.0.0.1:5001"
+  - name: endpoints
+    description: "Comma-separated list of endpoints to test"
+    default: "/api/cards,/api/automations,/api/pulse/cards"

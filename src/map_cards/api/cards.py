@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from map_cards.database import get_db
 from map_cards.models import Card
+from map_cards.services.bootstrap import build_install_options
 from map_cards.services.search import get_categories_with_counts, search_cards
 
 __all__ = ["router"]
@@ -38,6 +39,7 @@ def _card_to_dict(card: Card) -> dict[str, Any]:
         "trending_score": round(card.trending_score or 0.0, 2),
         "created_at": card.created_at.isoformat() if card.created_at else None,
         "updated_at": card.updated_at.isoformat() if card.updated_at else None,
+        "install_options": build_install_options(card),
     }
 
 

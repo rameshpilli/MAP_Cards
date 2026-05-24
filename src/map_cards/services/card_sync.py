@@ -63,15 +63,25 @@ def _parse_date(date_str: str | None) -> datetime:
 def sync_cards_from_directory(
     db: Session,
     cards_dir: str | None = None,
+    *,
+    prune_missing: bool = False,
 ) -> dict[str, int | list[str]]:
     """Walk the cards directory, parse each ``card.yaml``, and upsert into the DB.
 
-    Returns ``{"synced": int, "skipped": int, "errors": [str, ...]}``.
+    When ``prune_missing`` is true, cards not present on disk are removed from the DB.
+
+    Returns ``{"synced": int, "skipped": int, "pruned": int, "errors": [str, ...]}``.
     """
     cards_path = Path(cards_dir or settings.cards_dir)
     schema = load_schema()
 
-    results: dict[str, int | list[str]] = {"synced": 0, "skipped": 0, "errors": []}
+    results: dict[str, int | list[str]] = {
+        "synced": 0,
+        "skipped": 0,
+        "pruned": 0,
+        "errors": [],
+    }
+    seen_names: set[str] = set()
 
     if not cards_path.exists():
         results["errors"].append(f"Cards directory not found: {cards_path}")  # type: ignore[union-attr]
@@ -91,6 +101,8 @@ def sync_cards_from_directory(
             if not data:
                 results["errors"].append(f"{card_dir.name}: Empty YAML file")  # type: ignore[union-attr]
                 continue
+
+            seen_names.add(data["name"])
 
             # Validate against schema
             if schema:
@@ -142,6 +154,12 @@ def sync_cards_from_directory(
             results["errors"].append(f"{card_dir.name}: YAML parse error: {exc}")  # type: ignore[union-attr]
         except Exception as exc:  # noqa: BLE001
             results["errors"].append(f"{card_dir.name}: {exc}")  # type: ignore[union-attr]
+
+    if prune_missing and seen_names:
+        stale_cards = db.query(Card).filter(~Card.name.in_(seen_names)).all()
+        for stale_card in stale_cards:
+            db.delete(stale_card)
+        results["pruned"] = len(stale_cards)  # type: ignore[assignment]
 
     db.commit()
     return results

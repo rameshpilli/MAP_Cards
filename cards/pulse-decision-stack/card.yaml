@@ -1,0 +1,81 @@
+name: pulse-decision-stack
+version: "1.0.0"
+title: "AI Decision Stack (Pulse)"
+description: "Builds a morning-brief AI decision stack with customizable cards, rules engine, and natural-language card creation — users chat to configure what they see."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "multi-agent"
+tags: ["ai-inbox", "decision-stack", "pulse", "customizable", "rules-engine", "briefing"]
+platforms: ["claude", "codex"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are building an AI-curated decision stack — a morning brief that tells busy professionals what needs attention, what the AI handled, and what can be ignored.
+
+  ## Architecture
+
+  ### PulseCard model
+  Each card is a customizable container with rules:
+  - title, description, color, icon, position
+  - is_default (shipped cards vs user-created)
+  - rules: list of filter conditions
+
+  ### PulseRule model
+  Each rule determines what emails/items go into a card:
+  - condition: natural language description
+  - action: "include" | "exclude" | "move_to"
+  - filter_config: structured filters (from_contains, subject_contains, keywords, domain, etc.)
+
+  ### Default cards (seeded on first use)
+  1. Needs You Now (red) — flagged, important, urgent, overdue
+  2. Worth a Look (green) — known contacts, industry news
+  3. On Your Calendar (blue) — meeting-related
+  4. Aiden Handled (teal) — auto-processed items
+  5. Connections (purple) — cross-referenced contacts
+
+  ## Key features
+
+  ### Natural-language card creation
+  User chats: "Create a card for deal flow emails"
+  → LLM infers: title="Deal Flow", rules=[{from contacts, keywords: mandate/pricing/deal}]
+  → User confirms → card appears on Pulse
+
+  ### Natural-language rule modification
+  User: "Whenever Goldman emails me, that's Needs You Now"
+  → LLM generates: {action: "include", filter: {domain: "gs.com"}}
+  → Added to the Needs You Now card
+
+  ### Aiden Handled — the hero section
+  The greeting IS the handled summary:
+  "✦ Good morning, Ramesh. I cleared 24 items overnight — declined 4 recruiters,
+   forwarded 2 to Sarah, saved 3 drafts. Here's what's left:"
+
+  Detail view: grouped by category (Cleared, Forwarded, Snoozed, Archived, Drafts, Reminders, Quarantined)
+  Each row: hover to undo, click to see full email. No visible buttons by default.
+
+  ### Card settings
+  Each card has a ⚙ gear icon → opens a sheet showing rules + add/remove/edit via chat.
+
+  ## API
+  ```
+  GET/POST   /api/pulse/cards
+  GET/PATCH/DELETE /api/pulse/cards/{id}
+  POST       /api/pulse/cards/{id}/rules
+  PATCH/DELETE /api/pulse/rules/{id}
+  POST       /api/pulse/cards/propose      (LLM)
+  POST       /api/pulse/cards/{id}/rules/propose (LLM)
+  ```
+
+  ## Rules
+  - Default cards cannot be deleted (409 Conflict)
+  - Rules use AND logic (all filters must match)
+  - classify_message() checks cards in position order, first match wins
+  - Card/rule creation validates inputs (min_length, color allowlist, action allowlist)
+variables:
+  - name: default_cards
+    description: "Number of default cards to seed"
+    default: "5"
+  - name: llm_model
+    description: "Model for propose endpoints"
+    default: "claude-sonnet-4.6"

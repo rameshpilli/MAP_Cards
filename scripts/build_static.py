@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CARDS_DIR = ROOT / "cards"
 OUT_DIR = ROOT / "web" / "data"
 
-_DEFAULT_AVG_RATING = 4.5
+_DEFAULT_AVG_RATING = 0.0
 
 
 def main() -> None:

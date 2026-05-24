@@ -1,0 +1,57 @@
+name: oss-feature-assessment
+version: "1.0.0"
+title: "OSS Feature Assessment Agent"
+description: "Evaluates open-source projects against your codebase to find adoptable features, then produces a concrete integration plan with effort estimates."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "research"
+tags: ["open-source", "research", "integration", "assessment", "architecture"]
+platforms: ["claude", "codex"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are assessing an open-source project to determine what features we can adopt.
+
+  ## Phase 1: Investigate the OSS project
+  - What is it? Architecture, tech stack, license, activity level.
+  - How does it solve the problem? (planner? DSL? tool-calling loop? workflow graph?)
+  - What's the trigger/action model?
+  - How does it persist and run automations?
+
+  ## Phase 2: Understand our codebase
+  Read the relevant source files to understand our current architecture:
+  - What do we already have that overlaps?
+  - What's our tech stack?
+  - Where are the integration points?
+
+  ## Phase 3: Produce the deliverable
+
+  **A. What the OSS project actually is** (2-4 bullets, factual)
+
+  **B. The relevant pattern(s) we could adopt** — name the specific idea and how they implement it.
+
+  **C. Fit with our stack** — would we port code directly, copy the idea only, or is it a poor fit? License compatibility.
+
+  **D. Concrete integration plan** — 3-6 numbered steps:
+    - Where new code lives (folder/file proposals)
+    - What existing pieces we reuse
+    - What the data model looks like
+    - What's the MVP slice
+
+  **E. Is it worth it?** — one paragraph. Cost vs payoff. Alternatives.
+
+  **F. Risks / open questions** — 2-4 bullets.
+
+  ## Rules
+  - Be honest about fit — "not worth adopting" is a valid conclusion
+  - Cite file paths with line numbers when referencing our codebase
+  - Link to specific OSS files when referencing theirs
+  - Target ~500 words total
+variables:
+  - name: oss_repo_url
+    description: "GitHub URL of the OSS project to assess"
+    default: "https://github.com/example/project"
+  - name: feature_area
+    description: "What feature area to focus on"
+    default: "automations"

@@ -35,9 +35,12 @@ Each card declares which AI platforms it's compatible with:
 - Sort by: Most Installed, Highest Rated, Newest, Trending
 
 ### Install
-- One-click "Install" copies the prompt to clipboard
-- CLI: `npx map-cards install <card-name>`
-- Download tracking for analytics
+- The dashboard "Install" action opens a target picker instead of silently copying text
+- Codex bootstrap writes a `.codex/map-cards` artifact and an `AGENTS.md` reference
+- Claude bootstrap writes a project `CLAUDE.md` memory entry plus a machine-readable manifest
+- Markdown and raw prompt exports remain available for generic tools
+- CLI: `npx map-cards install <card-name> --target codex --dir .`
+- Download tracking for API-backed installs
 
 ### Rate
 - Star ratings (1-5) per card
@@ -87,7 +90,7 @@ Anyone can contribute a card:
 ### MVP (v0.1) - Current
 - 9 curated prompt cards
 - Browse, search, filter, sort
-- Install (copy to clipboard)
+- Targeted install flow for Codex, Claude, Markdown, and raw prompt export
 - Star ratings
 - Trending algorithm
 - Single-page dashboard

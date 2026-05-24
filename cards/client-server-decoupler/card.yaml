@@ -1,0 +1,71 @@
+name: client-server-decoupler
+version: "1.0.0"
+title: "Client-Server Decoupling Agent"
+description: "Audits a monolithic app's coupling points and implements full client-server separation — configurable endpoint, SSE auth headers, CORS, health validation."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "devops"
+tags: ["architecture", "decoupling", "kubernetes", "electron", "cors", "sse"]
+platforms: ["claude", "codex"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are decoupling a client application from its backend so the client can connect to ANY server endpoint (local dev, staging, production K8s).
+
+  ## Phase 1: Audit coupling points
+
+  For each coupling point, rate LOW/MEDIUM/HIGH:
+  - Static file serving (server serves client HTML?)
+  - API_BASE configuration (hardcoded? configurable?)
+  - Auth flow (same-origin dependent? CORS issues?)
+  - WebSocket/SSE streams (same-origin assumed? auth header support?)
+  - Client sync (device_id, stream endpoint)
+
+  ## Phase 2: Implement decoupling
+
+  ### 1. Endpoint configuration UI
+  Add a "Server Endpoint" field to settings (same UX as API key entry):
+  - Text input for URL
+  - "Test connection" button → calls /api/health, shows server name + version
+  - Persists to localStorage + app config
+
+  ### 2. API_BASE resolution chain
+  ```
+  App config (IPC) → localStorage → env var → default localhost
+  ```
+
+  ### 3. Replace EventSource with fetch-based SSE
+  EventSource can't send Authorization headers. Replace with:
+  ```javascript
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const reader = response.body.getReader();
+  // Parse SSE frames manually
+  ```
+
+  ### 4. Server CORS
+  Default to safe localhost origins. Allow `*` via env var for dev.
+  Ensure /api/health is exempt from auth middleware.
+
+  ### 5. Health endpoint metadata
+  Return `server_name`, `version`, `client_compatible` for connection validation.
+
+  ### 6. CSP update
+  Allow the configured endpoint URL in Content-Security-Policy connect-src.
+
+  ## Phase 3: Migration path
+  - No endpoint configured → defaults to localhost (existing behavior unchanged)
+  - Corporate onboarding: first launch prompts for endpoint → validates → saves
+  - Env var override for CI/automation
+
+  ## Rules
+  - Never break the existing local-dev flow
+  - Empty endpoint test → warn "Enter a URL first" (not false positive)
+  - All changes backward-compatible
+variables:
+  - name: client_framework
+    description: "Client framework type"
+    default: "Electron"
+  - name: default_port
+    description: "Default local server port"
+    default: "5001"

@@ -1,0 +1,65 @@
+name: product-vision-writer
+version: "1.0.0"
+title: "Product Vision Document Writer"
+description: "Rewrites a technical features doc into a product-positioning document organized under vision pillars — with roadmap, safety principles, and platform surfaces."
+author: "rameshpilli"
+author_url: "https://github.com/rameshpilli"
+category: "writing"
+tags: ["product", "vision", "documentation", "features", "roadmap", "positioning"]
+platforms: ["claude", "codex", "gpt"]
+created_at: "2026-05-24"
+updated_at: "2026-05-24"
+license: "MIT"
+prompt: |
+  You are rewriting a technical features document into a product-positioning document.
+
+  ## Structure
+
+  ### 1. Title + Vision
+  Replace the engineering title with a product name. Add the vision statement as a blockquote:
+  > [Product vision text — what the product believes, what it does for the user, how it makes them feel]
+
+  ### 2. Four vision pillars
+  Organize ALL existing features under 4 thematic pillars (not technical categories).
+  Each pillar gets:
+  - A 2-sentence intro explaining the user benefit
+  - A feature table: Feature | What The User Experiences | What Powers It
+
+  Example pillars:
+  - "Learns quietly in the background"
+  - "Find anything you've seen"
+  - "Connections you might have missed"
+  - "Your style, your past work"
+
+  ### 3. Key product surface (e.g., Pulse, Dashboard)
+  Dedicated section for the product's hero feature — how it works, what's customizable, API reference if applicable.
+
+  ### 4. Platform surfaces
+  Concise table: web, desktop, mobile, add-ins, integrations.
+
+  ### 5. Safety and trust
+  Principles table covering user control, data handling, confirmation gates, audit trails.
+
+  ### 6. Roadmap
+  3-4 planned features, each with a 2-3 sentence description.
+
+  ## Process
+  1. Read the ENTIRE current features doc
+  2. Inventory every feature (don't lose any)
+  3. Categorize under the 4 pillars
+  4. Rewrite in product-facing tone (not engineering-facing)
+  5. Add roadmap section for planned features
+
+  ## Rules
+  - Preserve EVERY feature from the original — don't lose any
+  - Tone: product-facing, not engineering-facing
+  - Use the vision language throughout
+  - Keep under 800 lines
+  - No placeholder text — every sentence should be specific
+variables:
+  - name: product_name
+    description: "Name of the product"
+    default: "Aiden"
+  - name: vision_text
+    description: "The product's vision statement"
+    default: "Your work lives everywhere and keeping up shouldn't feel impossible."

@@ -1,5 +1,45 @@
 [
   {
+    "name": "adversarial-input-tester",
+    "version": "1.0.0",
+    "title": "Adversarial Input Tester",
+    "description": "Spins up 3 parallel agents that try to BREAK your API with worst-case inputs \u2014 XSS, SQL injection, empty fields, massive payloads, race conditions, and edge cases.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "testing",
+    "tags": [
+      "adversarial",
+      "security",
+      "input-validation",
+      "edge-cases",
+      "api-testing",
+      "multi-agent"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are an adversarial testing orchestrator. Spin up 3 specialized agents that each try to BREAK a different aspect of the target system.\n\n## Agent 1: Input Validation Breaker\nTry every worst-case input scenario:\n- XSS payloads: `<script>alert(1)</script>` in every text field\n- SQL injection: `'; DROP TABLE users; --` in every field\n- Empty strings, null values, missing required fields\n- Very long strings (5000+ chars)\n- Unicode/emoji edge cases\n- HTML entities, control characters, newlines\n- Integer overflow (99999999999999999)\n- Negative numbers where positives expected\n- Float where integer expected\n- String where number expected\n- Nested JSON bombs\nFor each: send via curl, report HTTP status, PASS/FAIL.\n\n## Agent 2: Business Logic Breaker\nTry to violate business rules:\n- Create then immediately delete, then operate on deleted resource\n- Update to invalid state (e.g., set required field to empty via PATCH)\n- Double-submit the same action\n- Operate on resources belonging to other users/tenants\n- Exceed rate limits / create 100 items rapidly\n- Use expired/revoked tokens\n- Access admin endpoints as regular user\n\n## Agent 3: Protocol & Format Breaker\nTry protocol-level attacks:\n- Wrong HTTP method (GET instead of POST)\n- Missing Content-Type header\n- XML body instead of JSON\n- Massive request body (100KB+)\n- Concurrent requests to the same endpoint\n- Malformed JSON\n- Extra unexpected fields in the body\n- Path traversal in URL parameters\n\n## Synthesis\nAfter all 3 agents complete:\n1. Compile a table: Test # | Scenario | Expected | Actual | PASS/FAIL\n2. Group failures by severity: Critical / High / Medium / Low\n3. For each failure, propose the specific code fix\n\n## Rules\n- Each agent runs independently and tests via actual HTTP requests\n- Clean up all test data after each agent finishes\n- Report BOTH passes and failures (passes prove the system is robust)\n- Be creative \u2014 think like a malicious user, not a happy-path tester\n",
+    "variables": [
+      {
+        "name": "api_base_url",
+        "description": "Base URL of the API to test",
+        "default": "http://127.0.0.1:5001"
+      },
+      {
+        "name": "endpoints",
+        "description": "Comma-separated list of endpoints to test",
+        "default": "/api/cards,/api/automations,/api/pulse/cards"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
     "name": "adversarial-prompt-fuzzer",
     "version": "1.0.0",
     "title": "Adversarial Prompt Fuzzer",
@@ -36,7 +76,7 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -81,7 +121,47 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "client-server-decoupler",
+    "version": "1.0.0",
+    "title": "Client-Server Decoupling Agent",
+    "description": "Audits a monolithic app's coupling points and implements full client-server separation \u2014 configurable endpoint, SSE auth headers, CORS, health validation.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "devops",
+    "tags": [
+      "architecture",
+      "decoupling",
+      "kubernetes",
+      "electron",
+      "cors",
+      "sse"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are decoupling a client application from its backend so the client can connect to ANY server endpoint (local dev, staging, production K8s).\n\n## Phase 1: Audit coupling points\n\nFor each coupling point, rate LOW/MEDIUM/HIGH:\n- Static file serving (server serves client HTML?)\n- API_BASE configuration (hardcoded? configurable?)\n- Auth flow (same-origin dependent? CORS issues?)\n- WebSocket/SSE streams (same-origin assumed? auth header support?)\n- Client sync (device_id, stream endpoint)\n\n## Phase 2: Implement decoupling\n\n### 1. Endpoint configuration UI\nAdd a \"Server Endpoint\" field to settings (same UX as API key entry):\n- Text input for URL\n- \"Test connection\" button \u2192 calls /api/health, shows server name + version\n- Persists to localStorage + app config\n\n### 2. API_BASE resolution chain\n```\nApp config (IPC) \u2192 localStorage \u2192 env var \u2192 default localhost\n```\n\n### 3. Replace EventSource with fetch-based SSE\nEventSource can't send Authorization headers. Replace with:\n```javascript\nconst response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });\nconst reader = response.body.getReader();\n// Parse SSE frames manually\n```\n\n### 4. Server CORS\nDefault to safe localhost origins. Allow `*` via env var for dev.\nEnsure /api/health is exempt from auth middleware.\n\n### 5. Health endpoint metadata\nReturn `server_name`, `version`, `client_compatible` for connection validation.\n\n### 6. CSP update\nAllow the configured endpoint URL in Content-Security-Policy connect-src.\n\n## Phase 3: Migration path\n- No endpoint configured \u2192 defaults to localhost (existing behavior unchanged)\n- Corporate onboarding: first launch prompts for endpoint \u2192 validates \u2192 saves\n- Env var override for CI/automation\n\n## Rules\n- Never break the existing local-dev flow\n- Empty endpoint test \u2192 warn \"Enter a URL first\" (not false positive)\n- All changes backward-compatible\n",
+    "variables": [
+      {
+        "name": "client_framework",
+        "description": "Client framework type",
+        "default": "Electron"
+      },
+      {
+        "name": "default_port",
+        "description": "Default local server port",
+        "default": "5001"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -127,7 +207,91 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "design-review-council",
+    "version": "1.0.0",
+    "title": "Design Review Council",
+    "description": "Spins up 3 independent review agents \u2014 visual critique, UX content audit, and competitive research \u2014 to evaluate a design, then synthesizes a unified recommendation.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "multi-agent",
+    "tags": [
+      "design",
+      "review",
+      "ux",
+      "critique",
+      "council",
+      "parallel"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are running a design review council with 3 independent agents.\nEach agent reviews the same design from a different angle, then you synthesize.\n\n## Agent 1: Visual Design Critic\nRole: Senior UI designer\nTask: Identify what makes the design feel heavy, busy, or cluttered.\nFocus on:\n- Visual weight (too many borders, glows, competing elements?)\n- Information density (too many sections crammed together?)\n- Typography (too many font sizes/weights in close proximity?)\n- Color (too many accent colors competing?)\n- Spacing (too tight? not enough breathing room?)\nOutput: Prioritized list of 5-8 specific fixes, ordered by impact.\n\n## Agent 2: UX Content Strategist\nRole: UX strategist evaluating information architecture\nTask: Decide which elements are ESSENTIAL and which are noise.\nFor each element, output: KEEP (with rationale) or REMOVE (with rationale).\nTarget: cut at least 40% of visual elements.\nFocus on: What does the user NEED to see? What can be deferred?\n\n## Agent 3: Competitive Research Analyst\nRole: Industry researcher\nTask: Study how 5+ competing products handle the same UX pattern.\nFor each competitor: What do they show? What actions? How many taps to complete?\nOutput: The BEST pattern synthesized across all competitors.\n\n## Synthesis\nAfter all 3 agents report:\n1. Identify where all 3 agree (these are HIGH-CONFIDENCE fixes)\n2. Identify where agents disagree (flag for human decision)\n3. Produce a SINGLE recommended design with specific layout + content changes\n4. The recommendation should be actionable (not \"improve spacing\" \u2014 instead \"remove the dismiss button, add 8px padding between cards\")\n\n## Rules\n- All 3 agents run independently in parallel\n- No agent sees another's output until synthesis\n- Each agent must provide SPECIFIC, CONCRETE feedback (file paths, pixel values, element names)\n- The synthesis must pick ONE approach, not present options\n",
+    "variables": [
+      {
+        "name": "design_description",
+        "description": "What is being reviewed",
+        "default": "a mobile decision stack with 4 cards showing email categories"
+      },
+      {
+        "name": "target_user",
+        "description": "Who uses this product",
+        "default": "busy professionals (investment bankers, executives)"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "figma-screen-designer",
+    "version": "1.0.0",
+    "title": "Figma Screen Designer Agent",
+    "description": "Designs mobile app screens in Figma using the Plugin API \u2014 creates frames, cards, text, shapes, glows, and gradient effects matching a design system.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "multi-agent",
+    "tags": [
+      "figma",
+      "design",
+      "ui",
+      "mobile",
+      "plugin-api",
+      "dark-theme"
+    ],
+    "platforms": [
+      "claude"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are designing screens in a Figma file using the Plugin API via the `use_figma` MCP tool.\n\n## Design system tokens (dark theme)\n- Background: #0a0b10\n- Surface: #141823\n- Surface raised: #1e2535\n- Text primary: #f5f7fa\n- Text secondary: #a8b0bd\n- Text muted: #6b7385\n- Accent green: #1fc780\n- Purple: #996bff\n- Teal: #00b5b0\n- Blue: #457ded\n- Red: #f87171\n- Amber: #f5a62e\n- Border: rgba(255,255,255,0.04)\n- Font: Inter (Regular, Medium, Semi Bold, Bold)\n\n## Build approach (incremental, max 10 ops per call)\n1. **Find clear space**: scan existing frames for maxX, position new frame at maxX + 80px\n2. **Create wrapper frame**: 390\u00d7844 (iPhone), bg color, clipsContent=true\n3. **Add label**: text node above frame at y=204 with screen name\n4. **Build sections**: one use_figma call per section (header, hero, cards, footer)\n5. **Screenshot**: validate after each section\n\n## Critical rules\n- Colors are 0-1 range (divide hex by 255)\n- Load ALL fonts before creating text: `await figma.loadFontAsync({family:\"Inter\",style:\"Semi Bold\"})`\n- Use `return` for output (not console.log)\n- Return ALL created node IDs\n- Fills/strokes are read-only arrays \u2014 clone, modify, reassign\n- Set `layoutSizingHorizontal='FILL'` AFTER `appendChild`\n\n## Glow card pattern\n```javascript\n// Glow layer (colored blur behind card)\nconst glow = figma.createRectangle();\nglow.fills = [{ type: \"SOLID\", color: accentColor, opacity: 0.2 }];\nglow.effects = [{ type: \"LAYER_BLUR\", radius: 12, visible: true }];\nglow.cornerRadius = 22;\n\n// Inner card\nconst card = figma.createRectangle();\ncard.fills = [{ type: \"SOLID\", color: surfaceColor }];\ncard.effects = [{\n  type: \"DROP_SHADOW\", color: {r:0,g:0,b:0,a:0.4},\n  offset: {x:0,y:8}, radius: 24, spread: 0,\n  visible: true, blendMode: \"NORMAL\"\n}];\n```\n\n## Naming convention\nScreens: \"NN \u00b7 Title \u00b7 subtitle\" (e.g., \"29 \u00b7 Pulse \u00b7 decision stack\")\nLabels use middle dot (\u00b7) separator.\n",
+    "variables": [
+      {
+        "name": "screen_width",
+        "description": "Frame width in pixels",
+        "default": "390"
+      },
+      {
+        "name": "screen_height",
+        "description": "Frame height in pixels",
+        "default": "844"
+      },
+      {
+        "name": "theme",
+        "description": "Color theme",
+        "default": "dark"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -167,7 +331,46 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "hierarchical-memory-builder",
+    "version": "1.0.0",
+    "title": "Hierarchical Memory Builder",
+    "description": "Builds a 3-layer memory system \u2014 atomic facts, daily summaries, weekly narratives \u2014 with LLM consolidation and extractive fallback for temporal AI context.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "multi-agent",
+    "tags": [
+      "memory",
+      "summarization",
+      "knowledge-graph",
+      "temporal",
+      "rag"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are building a hierarchical memory summarization system with 3 layers:\n\n```\nLayer 3: Weekly summaries   \u2190 fold daily summaries per entity\nLayer 2: Daily summaries    \u2190 consolidate atomic facts per entity per day\nLayer 1: Atomic facts       \u2190 (subject, predicate, object) triples\n```\n\n## Data model\n\n### MemorySummary table\n- entity: str (person, company, topic being summarized)\n- period: \"daily\" | \"weekly\"\n- period_start / period_end: datetime\n- summary: str (the narrative)\n- fact_count: int\n- fact_ids: JSON list\n- embedding_id: int (for vector search)\n\n## Functions to implement\n\n### consolidate_daily()\n1. Query all facts created in the last 24 hours\n2. Group by subject (entity)\n3. For each entity with 2+ facts:\n   a. Build a prompt: \"Summarize these facts about {entity} into 2-3 sentences\"\n   b. Call LLM for summary (with extractive fallback if LLM unavailable)\n   c. Store as MemorySummary with period=\"daily\"\n   d. Embed for vector search\n\n### consolidate_weekly()\n1. Query daily summaries from the last 7 days\n2. Group by entity\n3. For entities with 2+ daily summaries:\n   a. Combine narratives into a weekly summary via LLM\n   b. Store as MemorySummary with period=\"weekly\"\n\n### search_summaries(query, period=None, limit=5)\nVector similarity search on summaries with optional period filter.\n\n### get_entity_timeline(entity, days=30)\nReturns weekly summaries + daily summaries + recent atomic facts for one entity.\n\n## Extractive fallback (when LLM unavailable)\n- Concatenate fact objects\n- Deduplicate\n- Extract named entities (regex: proper names, dates, currency)\n- Join into a plain summary sentence\n\n## Integration\n- Run consolidation every 6 hours via periodic job\n- Enhanced memory.search returns summaries alongside atomic facts\n- Enhanced system_prompt() gets a MEMORY.context section with recent entity timelines\n\n## Rules\n- Summaries are idempotent (skip if already exists for this entity+period)\n- Embed summaries in the SAME vector store but with ID offset (+10M) to avoid collision with facts\n- Gracefully handle LLM failures (extractive fallback, never crash)\n- Multi-tenant: iterate all tenant/user pairs, not just default\n",
+    "variables": [
+      {
+        "name": "consolidation_interval",
+        "description": "How often to run consolidation",
+        "default": "6 hours"
+      },
+      {
+        "name": "vector_id_offset",
+        "description": "Offset for summary IDs in shared vector store",
+        "default": "10000000"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -212,7 +415,7 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -258,7 +461,91 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "oss-feature-assessment",
+    "version": "1.0.0",
+    "title": "OSS Feature Assessment Agent",
+    "description": "Evaluates open-source projects against your codebase to find adoptable features, then produces a concrete integration plan with effort estimates.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "research",
+    "tags": [
+      "open-source",
+      "research",
+      "integration",
+      "assessment",
+      "architecture"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are assessing an open-source project to determine what features we can adopt.\n\n## Phase 1: Investigate the OSS project\n- What is it? Architecture, tech stack, license, activity level.\n- How does it solve the problem? (planner? DSL? tool-calling loop? workflow graph?)\n- What's the trigger/action model?\n- How does it persist and run automations?\n\n## Phase 2: Understand our codebase\nRead the relevant source files to understand our current architecture:\n- What do we already have that overlaps?\n- What's our tech stack?\n- Where are the integration points?\n\n## Phase 3: Produce the deliverable\n\n**A. What the OSS project actually is** (2-4 bullets, factual)\n\n**B. The relevant pattern(s) we could adopt** \u2014 name the specific idea and how they implement it.\n\n**C. Fit with our stack** \u2014 would we port code directly, copy the idea only, or is it a poor fit? License compatibility.\n\n**D. Concrete integration plan** \u2014 3-6 numbered steps:\n  - Where new code lives (folder/file proposals)\n  - What existing pieces we reuse\n  - What the data model looks like\n  - What's the MVP slice\n\n**E. Is it worth it?** \u2014 one paragraph. Cost vs payoff. Alternatives.\n\n**F. Risks / open questions** \u2014 2-4 bullets.\n\n## Rules\n- Be honest about fit \u2014 \"not worth adopting\" is a valid conclusion\n- Cite file paths with line numbers when referencing our codebase\n- Link to specific OSS files when referencing theirs\n- Target ~500 words total\n",
+    "variables": [
+      {
+        "name": "oss_repo_url",
+        "description": "GitHub URL of the OSS project to assess",
+        "default": "https://github.com/example/project"
+      },
+      {
+        "name": "feature_area",
+        "description": "What feature area to focus on",
+        "default": "automations"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "parallel-code-implementation",
+    "version": "1.0.0",
+    "title": "Parallel Code Implementation Agents",
+    "description": "Splits a feature across 4+ specialized agents that write non-overlapping files simultaneously \u2014 model, service, API, and tests \u2014 using a shared interface contract.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "multi-agent",
+    "tags": [
+      "parallel",
+      "implementation",
+      "full-stack",
+      "backend",
+      "testing",
+      "fast"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are orchestrating a parallel implementation of a new feature across multiple agents.\nEach agent owns distinct, non-overlapping files so there are no merge conflicts.\n\n## Step 1: Define the shared interface\n\nBefore spawning agents, define the data model and service interface that ALL agents agree on:\n- Model fields (table name, columns, types, relationships)\n- Service function signatures (name, params, return types)\n- API endpoint paths and request/response shapes\n\nWrite this interface spec in plain text \u2014 every agent receives it verbatim.\n\n## Step 2: Spawn 4 parallel agents\n\n**Agent A \u2014 Data Model + Migration:**\n- Creates the SQLAlchemy/ORM model file\n- Creates the database migration\n- Updates the models __init__.py\n\n**Agent B \u2014 Service Layer:**\n- Creates the service module with CRUD + business logic\n- Uses the model from Agent A (given the interface, not the actual file)\n\n**Agent C \u2014 API Routes + Schemas:**\n- Creates Pydantic request/response schemas\n- Creates REST endpoints that call the service\n- Updates the router registry\n\n**Agent D \u2014 Tests:**\n- Creates test file covering CRUD, edge cases, validation\n- Uses the same interface spec to know what to test\n\n## Step 3: Verify integration\n\nAfter all agents complete:\n1. Run the import chain: models \u2192 service \u2192 API \u2192 tests\n2. Run the test suite\n3. Fix any interface mismatches\n\n## Key rules\n- Each agent gets the FULL interface spec so they agree on types\n- No agent modifies files owned by another agent\n- All agents run simultaneously (don't wait for one to finish)\n- The interface spec is the single source of truth\n",
+    "variables": [
+      {
+        "name": "feature_name",
+        "description": "Name of the feature being implemented",
+        "default": "automations"
+      },
+      {
+        "name": "framework",
+        "description": "Web framework",
+        "default": "FastAPI + SQLAlchemy"
+      },
+      {
+        "name": "num_agents",
+        "description": "Number of parallel agents",
+        "default": "4"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -303,7 +590,88 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "product-vision-writer",
+    "version": "1.0.0",
+    "title": "Product Vision Document Writer",
+    "description": "Rewrites a technical features doc into a product-positioning document organized under vision pillars \u2014 with roadmap, safety principles, and platform surfaces.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "writing",
+    "tags": [
+      "product",
+      "vision",
+      "documentation",
+      "features",
+      "roadmap",
+      "positioning"
+    ],
+    "platforms": [
+      "claude",
+      "codex",
+      "gpt"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are rewriting a technical features document into a product-positioning document.\n\n## Structure\n\n### 1. Title + Vision\nReplace the engineering title with a product name. Add the vision statement as a blockquote:\n> [Product vision text \u2014 what the product believes, what it does for the user, how it makes them feel]\n\n### 2. Four vision pillars\nOrganize ALL existing features under 4 thematic pillars (not technical categories).\nEach pillar gets:\n- A 2-sentence intro explaining the user benefit\n- A feature table: Feature | What The User Experiences | What Powers It\n\nExample pillars:\n- \"Learns quietly in the background\"\n- \"Find anything you've seen\"\n- \"Connections you might have missed\"\n- \"Your style, your past work\"\n\n### 3. Key product surface (e.g., Pulse, Dashboard)\nDedicated section for the product's hero feature \u2014 how it works, what's customizable, API reference if applicable.\n\n### 4. Platform surfaces\nConcise table: web, desktop, mobile, add-ins, integrations.\n\n### 5. Safety and trust\nPrinciples table covering user control, data handling, confirmation gates, audit trails.\n\n### 6. Roadmap\n3-4 planned features, each with a 2-3 sentence description.\n\n## Process\n1. Read the ENTIRE current features doc\n2. Inventory every feature (don't lose any)\n3. Categorize under the 4 pillars\n4. Rewrite in product-facing tone (not engineering-facing)\n5. Add roadmap section for planned features\n\n## Rules\n- Preserve EVERY feature from the original \u2014 don't lose any\n- Tone: product-facing, not engineering-facing\n- Use the vision language throughout\n- Keep under 800 lines\n- No placeholder text \u2014 every sentence should be specific\n",
+    "variables": [
+      {
+        "name": "product_name",
+        "description": "Name of the product",
+        "default": "Aiden"
+      },
+      {
+        "name": "vision_text",
+        "description": "The product's vision statement",
+        "default": "Your work lives everywhere and keeping up shouldn't feel impossible."
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "pulse-decision-stack",
+    "version": "1.0.0",
+    "title": "AI Decision Stack (Pulse)",
+    "description": "Builds a morning-brief AI decision stack with customizable cards, rules engine, and natural-language card creation \u2014 users chat to configure what they see.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "multi-agent",
+    "tags": [
+      "ai-inbox",
+      "decision-stack",
+      "pulse",
+      "customizable",
+      "rules-engine",
+      "briefing"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are building an AI-curated decision stack \u2014 a morning brief that tells busy professionals what needs attention, what the AI handled, and what can be ignored.\n\n## Architecture\n\n### PulseCard model\nEach card is a customizable container with rules:\n- title, description, color, icon, position\n- is_default (shipped cards vs user-created)\n- rules: list of filter conditions\n\n### PulseRule model\nEach rule determines what emails/items go into a card:\n- condition: natural language description\n- action: \"include\" | \"exclude\" | \"move_to\"\n- filter_config: structured filters (from_contains, subject_contains, keywords, domain, etc.)\n\n### Default cards (seeded on first use)\n1. Needs You Now (red) \u2014 flagged, important, urgent, overdue\n2. Worth a Look (green) \u2014 known contacts, industry news\n3. On Your Calendar (blue) \u2014 meeting-related\n4. Aiden Handled (teal) \u2014 auto-processed items\n5. Connections (purple) \u2014 cross-referenced contacts\n\n## Key features\n\n### Natural-language card creation\nUser chats: \"Create a card for deal flow emails\"\n\u2192 LLM infers: title=\"Deal Flow\", rules=[{from contacts, keywords: mandate/pricing/deal}]\n\u2192 User confirms \u2192 card appears on Pulse\n\n### Natural-language rule modification\nUser: \"Whenever Goldman emails me, that's Needs You Now\"\n\u2192 LLM generates: {action: \"include\", filter: {domain: \"gs.com\"}}\n\u2192 Added to the Needs You Now card\n\n### Aiden Handled \u2014 the hero section\nThe greeting IS the handled summary:\n\"\u2726 Good morning, Ramesh. I cleared 24 items overnight \u2014 declined 4 recruiters,\n forwarded 2 to Sarah, saved 3 drafts. Here's what's left:\"\n\nDetail view: grouped by category (Cleared, Forwarded, Snoozed, Archived, Drafts, Reminders, Quarantined)\nEach row: hover to undo, click to see full email. No visible buttons by default.\n\n### Card settings\nEach card has a \u2699 gear icon \u2192 opens a sheet showing rules + add/remove/edit via chat.\n\n## API\n```\nGET/POST   /api/pulse/cards\nGET/PATCH/DELETE /api/pulse/cards/{id}\nPOST       /api/pulse/cards/{id}/rules\nPATCH/DELETE /api/pulse/rules/{id}\nPOST       /api/pulse/cards/propose      (LLM)\nPOST       /api/pulse/cards/{id}/rules/propose (LLM)\n```\n\n## Rules\n- Default cards cannot be deleted (409 Conflict)\n- Rules use AND logic (all filters must match)\n- classify_message() checks cards in position order, first match wins\n- Card/rule creation validates inputs (min_length, color allowlist, action allowlist)\n",
+    "variables": [
+      {
+        "name": "default_cards",
+        "description": "Number of default cards to seed",
+        "default": "5"
+      },
+      {
+        "name": "llm_model",
+        "description": "Model for propose endpoints",
+        "default": "claude-sonnet-4.6"
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -348,7 +716,47 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
+    "rating_count": 0
+  },
+  {
+    "name": "smart-email-classifier",
+    "version": "1.0.0",
+    "title": "Smart Email Classifier",
+    "description": "Builds a multi-tier email classification system \u2014 heuristic rules first, LLM fallback second \u2014 supporting both Gmail and Outlook with 11+ intelligent categories.",
+    "author": "rameshpilli",
+    "author_url": "https://github.com/rameshpilli",
+    "category": "multi-agent",
+    "tags": [
+      "email",
+      "classification",
+      "gmail",
+      "outlook",
+      "heuristics",
+      "llm"
+    ],
+    "platforms": [
+      "claude",
+      "codex"
+    ],
+    "created_at": "2026-05-24",
+    "updated_at": "2026-05-24",
+    "license": "MIT",
+    "prompt": "You are building a smart email classification system that replaces generic \"Low signal\" tags with 11 intelligent categories. The system must work across both Gmail and Outlook.\n\n## Category taxonomy (priority order \u2014 first match wins)\n\n| Tag | Color | Determination |\n|---|---|---|\n| spam | red | is_spam flag |\n| action-needed | red | is_flagged, is_important, urgent keywords in subject |\n| government | red | sender domain .gov, DMV, IRS, SSA |\n| order-update | teal | amazon.com, ups.com, fedex.com; subject has order/shipped/delivered |\n| meeting | blue | subject has meeting/calendar/invite/rsvp/agenda |\n| promotion | amber | Gmail promotions tab + subject has % off/sale/free/deal |\n| subscription | grey | List-Unsubscribe header + noreply sender |\n| newsletter | grey | List-Unsubscribe or Gmail updates/forums tab |\n| social | blue | Gmail social tab |\n| work | purple | sender domain matches user's own domain |\n| personal | green | primary tab, no List-Unsubscribe, not noreply (default) |\n\n## Implementation\n\n### Server-side: `classify_smart_tag()` function\nA 13-step heuristic chain that checks in priority order. No LLM needed \u2014 fast, deterministic, zero-cost.\n\nInputs: sender_address, sender_name, subject, category_hint (Gmail), is_important, is_flagged, is_spam, has_list_unsubscribe\n\n### Dual-provider support\n- **Gmail**: Read `CATEGORY_*` labels \u2192 `category_hint` (promotions, updates, social, forums, empty=primary)\n- **Outlook**: Read `inferenceClassification` (focused/other) as category_hint equivalent\n- **Both**: Check `List-Unsubscribe` header for newsletter/subscription detection\n\n### Client-side mirror\nImplement the same heuristic chain in JavaScript as `classifySmartTag()`. Use server `smart_tag` when available, fall back to client-side heuristics.\n\n### Display\nColor-coded tag pills per category. Priority sort: action-needed first, subscriptions last.\n\n## Rules\n- Heuristics FIRST \u2014 they're fast, free, and deterministic\n- LLM only for ambiguous emails that fall through to \"personal\"\n- Must work offline (no API calls for basic classification)\n- The same email must get the same tag on server AND client\n",
+    "variables": [
+      {
+        "name": "email_provider",
+        "description": "Primary email provider",
+        "default": "gmail"
+      },
+      {
+        "name": "additional_categories",
+        "description": "Custom categories to add beyond the default 11",
+        "default": ""
+      }
+    ],
+    "download_count": 0,
+    "avg_rating": 0.0,
     "rating_count": 0
   },
   {
@@ -393,7 +801,7 @@
       }
     ],
     "download_count": 0,
-    "avg_rating": 4.5,
+    "avg_rating": 0.0,
     "rating_count": 0
   }
 ]

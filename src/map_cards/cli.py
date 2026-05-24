@@ -1,6 +1,6 @@
-"""Thin CLI entry point that delegates to the seed command.
+"""Thin Python CLI entry point that delegates to the seed command.
 
-Run via ``python -m map_cards.cli`` or the installed ``map-cards`` console script.
+Run via ``python -m map_cards.cli`` or the installed ``map-cards-seed`` console script.
 """
 
 from __future__ import annotations

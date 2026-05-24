@@ -55,7 +55,16 @@ Get a single card by its slug name.
 **Errors:** `404` if card not found.
 
 ### POST /api/cards/{name}/download
-Track a download and return the prompt text.
+Track a download and return the prompt plus target-specific bootstrap metadata.
+
+**Request Body:**
+```json
+{
+  "target": "codex"
+}
+```
+
+Supported targets: `codex`, `claude`, `markdown`, `json`, `yaml`, `prompt`.
 
 **Response:**
 ```json
@@ -64,9 +73,34 @@ Track a download and return the prompt text.
   "title": "Full-Stack Code Review Agent",
   "prompt": "...",
   "variables": [...],
-  "download_count": 43
+  "download_count": 43,
+  "install_options": [
+    {
+      "target": "codex",
+      "label": "Bootstrap into Codex",
+      "command": "npx map-cards install full-stack-code-review --target codex --dir ."
+    }
+  ],
+  "bootstrap": {
+    "target": "codex",
+    "filename": "full-stack-code-review.codex.md",
+    "content_type": "text/markdown",
+    "content": "# MAPrompt Card: ...",
+    "next_steps": ["Run the Codex install command from the workspace root."]
+  }
 }
 ```
+
+### GET /api/cards/{name}/bootstrap
+Return a target-specific bootstrap artifact without recording download analytics.
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `target` | string | `"codex"` | One of `codex`, `claude`, `markdown`, `json`, `yaml`, `prompt` |
+| `download` | bool | `false` | Return the artifact as a file attachment |
+
+**Response:** Same `bootstrap` object returned by the download endpoint. When `download=true`, the response body is the artifact content with a `Content-Disposition: attachment` header.
 
 ### POST /api/cards/{name}/rate
 Rate a card 1-5 stars. Creates or updates the rating for the given user.

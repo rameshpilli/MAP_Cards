@@ -41,7 +41,7 @@ test = [
 ]
 
 [project.scripts]
-map-cards = "map_cards.cli:main"
+map-cards-seed = "map_cards.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/map-cards/map-cards"

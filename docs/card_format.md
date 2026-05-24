@@ -81,6 +81,8 @@ Cards are validated against the JSON Schema at `schemas/card-schema.json`. Run v
 
 ```bash
 python -m tests.test_card_validation
+# or seed the database:
+python -m map_cards.seed
 ```
 
 The schema enforces:

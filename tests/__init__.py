@@ -1,0 +1,1 @@
+"""MAPrompt Cards test suite."""

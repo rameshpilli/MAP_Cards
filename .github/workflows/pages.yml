@@ -32,8 +32,8 @@ jobs:
       - name: Prepare pages artifact
         run: |
           mkdir -p _site/data
-          cp client/index.html _site/index.html
-          cp -r client/data/* _site/data/ 2>/dev/null || true
+          cp web/index.html _site/index.html
+          cp -r web/data/* _site/data/ 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:

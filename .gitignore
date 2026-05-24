@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+*.db
+*.db-wal
+*.db-shm
+data/*.db
+
+# Node
+node_modules/
+cli/node_modules/
+
+# Build artifacts
+_site/
+map_cards.egg-info/
+
+# Linter cache
+.ruff_cache/

@@ -1,15 +1,22 @@
 """Tests for full-text search across cards."""
 
+from __future__ import annotations
+
+import logging
 import sys
 from datetime import datetime, timezone
 
-from server.db.base import SessionLocal, create_tables, engine, Base
-from server.db.models import Card
-from server.services.search import search_cards, get_categories_with_counts
+from map_cards.database import Base, SessionLocal, create_tables, engine
+from map_cards.models import Card
+from map_cards.services.search import get_categories_with_counts, search_cards
+
+logger = logging.getLogger(__name__)
+
+_PROMPT_PLACEHOLDER = "x" * 100
 
 
-def setup_db():
-    """Create a fresh test database with sample cards."""
+def _setup_db() -> SessionLocal:
+    """Create a fresh test database with three sample cards."""
     Base.metadata.drop_all(bind=engine)
     create_tables()
     db = SessionLocal()
@@ -21,7 +28,7 @@ def setup_db():
             description="Reviews React components for best practices",
             author="alice", category="code-review",
             tags=["react", "frontend"], platforms=["claude"],
-            prompt="x" * 100, version="1.0.0",
+            prompt=_PROMPT_PLACEHOLDER, version="1.0.0",
             download_count=50, avg_rating=4.5, created_at=now, updated_at=now,
         ),
         Card(
@@ -29,7 +36,7 @@ def setup_db():
             description="Scans Python code for security vulnerabilities",
             author="bob", category="security",
             tags=["python", "security"], platforms=["claude", "gpt"],
-            prompt="x" * 100, version="1.0.0",
+            prompt=_PROMPT_PLACEHOLDER, version="1.0.0",
             download_count=30, avg_rating=3.8, created_at=now, updated_at=now,
         ),
         Card(
@@ -37,7 +44,7 @@ def setup_db():
             description="Writes technical blog posts from outlines",
             author="carol", category="writing",
             tags=["writing", "blog"], platforms=["gpt"],
-            prompt="x" * 100, version="1.0.0",
+            prompt=_PROMPT_PLACEHOLDER, version="1.0.0",
             download_count=100, avg_rating=4.9, created_at=now, updated_at=now,
         ),
     ]
@@ -46,94 +53,94 @@ def setup_db():
     return db
 
 
-def test_search_by_title():
+def test_search_by_title() -> None:
     """Search should match card titles."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="React")
         assert len(results) == 1, f"Expected 1 result, got {len(results)}"
         assert results[0].name == "test-react-review"
-        print("  PASS: Search by title")
+        logger.info("  PASS: Search by title")
     finally:
         db.close()
 
 
-def test_search_by_description():
+def test_search_by_description() -> None:
     """Search should match card descriptions."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="vulnerabilities")
         assert len(results) == 1, f"Expected 1 result, got {len(results)}"
         assert results[0].name == "test-python-security"
-        print("  PASS: Search by description")
+        logger.info("  PASS: Search by description")
     finally:
         db.close()
 
 
-def test_search_by_author():
+def test_search_by_author() -> None:
     """Search should match card authors."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="carol")
         assert len(results) == 1, f"Expected 1 result, got {len(results)}"
         assert results[0].name == "test-blog-writer"
-        print("  PASS: Search by author")
+        logger.info("  PASS: Search by author")
     finally:
         db.close()
 
 
-def test_search_empty_returns_all():
+def test_search_empty_returns_all() -> None:
     """Empty search should return all cards."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="")
         assert len(results) == 3, f"Expected 3 results, got {len(results)}"
-        print("  PASS: Empty search returns all")
+        logger.info("  PASS: Empty search returns all")
     finally:
         db.close()
 
 
-def test_filter_by_category():
+def test_filter_by_category() -> None:
     """Category filter should work."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="", category="security")
         assert len(results) == 1, f"Expected 1 result, got {len(results)}"
         assert results[0].category == "security"
-        print("  PASS: Filter by category")
+        logger.info("  PASS: Filter by category")
     finally:
         db.close()
 
 
-def test_sort_by_downloads():
+def test_sort_by_downloads() -> None:
     """Sort by downloads should order correctly."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="", sort_by="downloads")
         assert len(results) == 3
         assert results[0].download_count >= results[1].download_count
         assert results[1].download_count >= results[2].download_count
-        print("  PASS: Sort by downloads")
+        logger.info("  PASS: Sort by downloads")
     finally:
         db.close()
 
 
-def test_sort_by_rating():
+def test_sort_by_rating() -> None:
     """Sort by rating should order correctly."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="", sort_by="rating")
         assert len(results) == 3
         assert results[0].avg_rating >= results[1].avg_rating
         assert results[1].avg_rating >= results[2].avg_rating
-        print("  PASS: Sort by rating")
+        logger.info("  PASS: Sort by rating")
     finally:
         db.close()
 
 
-def test_categories_with_counts():
+def test_categories_with_counts() -> None:
     """Get categories should return correct counts."""
-    db = setup_db()
+    db = _setup_db()
     try:
         cats = get_categories_with_counts(db)
         assert len(cats) == 3, f"Expected 3 categories, got {len(cats)}"
@@ -141,25 +148,28 @@ def test_categories_with_counts():
         assert cat_dict["code-review"] == 1
         assert cat_dict["security"] == 1
         assert cat_dict["writing"] == 1
-        print("  PASS: Categories with counts")
+        logger.info("  PASS: Categories with counts")
     finally:
         db.close()
 
 
-def test_search_case_insensitive():
+def test_search_case_insensitive() -> None:
     """Search should be case-insensitive."""
-    db = setup_db()
+    db = _setup_db()
     try:
         results = search_cards(db, query="REACT")
         assert len(results) == 1, f"Expected 1 result, got {len(results)}"
-        print("  PASS: Case-insensitive search")
+        logger.info("  PASS: Case-insensitive search")
     finally:
         db.close()
 
 
-def main():
-    print("\nTest: Search")
-    print("=" * 40)
+def main() -> None:
+    """Run all search tests."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger.info("\nTest: Search")
+    logger.info("=" * 40)
+
     tests = [
         test_search_by_title,
         test_search_by_description,
@@ -177,14 +187,14 @@ def main():
         try:
             test()
             passed += 1
-        except AssertionError as e:
-            print(f"  FAIL: {test.__name__}: {e}")
+        except AssertionError as exc:
+            logger.error("  FAIL: %s: %s", test.__name__, exc)
             failed += 1
-        except Exception as e:
-            print(f"  ERROR: {test.__name__}: {e}")
+        except Exception as exc:
+            logger.error("  ERROR: %s: %s", test.__name__, exc)
             failed += 1
 
-    print(f"\n{passed} passed, {failed} failed")
+    logger.info("\n%d passed, %d failed", passed, failed)
     if failed > 0:
         sys.exit(1)
 

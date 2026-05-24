@@ -53,6 +53,9 @@ pip install -e ".[dev]"
 python -m tests.test_card_validation
 ```
 
+Note: the backend source lives in `src/map_cards/`. To seed the database,
+run `python -m map_cards.seed`.
+
 ### 5. Open a Pull Request
 Push your branch and open a PR. The CI will automatically:
 - Validate your YAML against the JSON Schema

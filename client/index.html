@@ -630,6 +630,7 @@
     let currentSort = 'downloads';
     let currentSearch = '';
     let currentModalCard = null;
+    let staticMode = false; // true when running without the API (GitHub Pages)
 
     // ---- Fetch helpers ----
     async function fetchJSON(url) {
@@ -646,6 +647,30 @@
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
+    }
+
+    /**
+     * Load cards from the API when available, falling back to the
+     * pre-built static JSON for GitHub Pages / file:// usage.
+     */
+    async function loadCards() {
+        // Try API first (hosted deployments)
+        try {
+            const res = await fetch(`${API}/cards?limit=100`);
+            if (res.ok) {
+                const data = await res.json();
+                return data.cards || [];
+            }
+        } catch (_) {}
+
+        // Fallback: static JSON (GitHub Pages / file://)
+        staticMode = true;
+        try {
+            const res = await fetch('data/cards.json');
+            if (res.ok) return await res.json();
+        } catch (_) {}
+
+        return [];
     }
 
     // ---- Toast ----
@@ -760,6 +785,23 @@
     async function installCard(event, name) {
         event.stopPropagation();
         const btn = event.target;
+
+        if (staticMode) {
+            // Static mode: copy the prompt from local data, no download tracking
+            const card = allCards.find(c => c.name === name);
+            if (!card) { showToast('Card not found'); return; }
+            try {
+                await navigator.clipboard.writeText(card.prompt);
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                showToast('Prompt copied to clipboard!');
+            } catch {
+                showToast('Failed to copy prompt');
+            }
+            setTimeout(() => { btn.textContent = 'Install'; btn.classList.remove('copied'); }, 2000);
+            return;
+        }
+
         try {
             const data = await postJSON(`${API}/cards/${name}/download`);
             await navigator.clipboard.writeText(data.prompt);
@@ -823,6 +865,10 @@
     }
 
     async function rateCard(name, stars) {
+        if (staticMode) {
+            showToast('Ratings available on hosted version');
+            return;
+        }
         try {
             const userId = localStorage.getItem('map_user_id') || crypto.randomUUID();
             localStorage.setItem('map_user_id', userId);
@@ -871,37 +917,80 @@
         if (e.key === 'Escape') closeModal();
     });
 
+    // ---- Derive stats + categories from local card data ----
+    function computeLocalStats(cards) {
+        const contributors = new Set(cards.map(c => c.author));
+        const totalDownloads = cards.reduce((s, c) => s + (c.download_count || 0), 0);
+        const ratings = cards.filter(c => c.avg_rating > 0);
+        const avgRating = ratings.length
+            ? ratings.reduce((s, c) => s + c.avg_rating, 0) / ratings.length
+            : 0;
+        return {
+            total_cards: cards.length,
+            total_downloads: totalDownloads,
+            total_contributors: contributors.size,
+            average_rating: avgRating,
+        };
+    }
+
+    function computeLocalCategories(cards) {
+        const counts = {};
+        cards.forEach(c => { counts[c.category] = (counts[c.category] || 0) + 1; });
+        return Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([name, count]) => ({ name, count }));
+    }
+
     // ---- Init ----
     async function init() {
         try {
-            // Fetch stats
-            const stats = await fetchJSON(`${API}/stats`);
-            document.getElementById('statCards').textContent = stats.total_cards;
-            document.getElementById('statDownloads').textContent = stats.total_downloads.toLocaleString();
-            document.getElementById('statContributors').textContent = stats.total_contributors;
-            document.getElementById('statRating').textContent = stats.average_rating > 0 ? stats.average_rating.toFixed(1) : '-';
+            // Load cards (API with static JSON fallback)
+            allCards = await loadCards();
 
-            // Fetch categories
-            const catData = await fetchJSON(`${API}/cards/categories`);
-            renderCategoryPills(catData.categories || []);
+            if (!staticMode) {
+                // ---- API mode: fetch rich endpoints ----
+                const stats = await fetchJSON(`${API}/stats`);
+                document.getElementById('statCards').textContent = stats.total_cards;
+                document.getElementById('statDownloads').textContent = stats.total_downloads.toLocaleString();
+                document.getElementById('statContributors').textContent = stats.total_contributors;
+                document.getElementById('statRating').textContent = stats.average_rating > 0 ? stats.average_rating.toFixed(1) : '-';
 
-            // Fetch trending
-            const trendingData = await fetchJSON(`${API}/cards/trending?limit=3`);
-            renderCards(trendingData.cards || [], 'trendingGrid');
-            if ((trendingData.cards || []).length === 0) {
-                document.getElementById('trendingHeader').style.display = 'none';
+                const catData = await fetchJSON(`${API}/cards/categories`);
+                renderCategoryPills(catData.categories || []);
+
+                const trendingData = await fetchJSON(`${API}/cards/trending?limit=3`);
+                renderCards(trendingData.cards || [], 'trendingGrid');
+                if ((trendingData.cards || []).length === 0) {
+                    document.getElementById('trendingHeader').style.display = 'none';
+                }
+            } else {
+                // ---- Static mode: derive stats + categories locally ----
+                const stats = computeLocalStats(allCards);
+                document.getElementById('statCards').textContent = stats.total_cards;
+                document.getElementById('statDownloads').textContent = stats.total_downloads.toLocaleString();
+                document.getElementById('statContributors').textContent = stats.total_contributors;
+                document.getElementById('statRating').textContent = stats.average_rating > 0 ? stats.average_rating.toFixed(1) : '-';
+
+                renderCategoryPills(computeLocalCategories(allCards));
+
+                // Show top 3 by rating as "trending"
+                const trending = [...allCards]
+                    .sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0))
+                    .slice(0, 3);
+                renderCards(trending, 'trendingGrid');
+                if (trending.length === 0) {
+                    document.getElementById('trendingHeader').style.display = 'none';
+                }
             }
 
-            // Fetch all cards
-            const cardsData = await fetchJSON(`${API}/cards?limit=100`);
-            allCards = cardsData.cards || [];
             filterAndDisplay();
 
         } catch (err) {
             console.error('Failed to load data:', err);
             document.getElementById('emptyState').style.display = 'block';
             document.getElementById('emptyState').querySelector('h3').textContent = 'Failed to load cards';
-            document.getElementById('emptyState').querySelector('p').textContent = 'Make sure the API server is running';
+            document.getElementById('emptyState').querySelector('p').textContent =
+                'Make sure the API server is running or data/cards.json is available';
         }
     }
 
